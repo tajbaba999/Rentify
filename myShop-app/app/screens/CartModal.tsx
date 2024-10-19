@@ -16,7 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Order, createOrder } from "@/api/api";
 import { useNavigation } from "@react-navigation/native";
 import ConfettiCannon from "react-native-confetti-cannon";
-import DateTimePicker from "@react-native-community/datetimepicker"; // Import DateTimePicker
+import DateTimePicker from "@react-native-community/datetimepicker";
+import dayjs from "dayjs";
 
 const CartScreen = () => {
   const { products, total, reduceProduct, addProduct, clearCart } =
@@ -43,16 +44,30 @@ const CartScreen = () => {
     setSubmitting(true);
     Keyboard.dismiss();
     try {
+      // Convert dates to string format using dayjs (e.g., 'YYYY-MM-DD')
+      const formattedStartDate = startDate
+        ? dayjs(startDate).format("YYYY-MM-DD")
+        : null;
+      const formattedEndDate = endDate
+        ? dayjs(endDate).format("YYYY-MM-DD")
+        : null;
+
       const response = await createOrder({
         email,
         products: products.map((product) => ({
           product_id: product.id,
           quantity: product.quantity,
         })),
-        start_date: startDate,
-        end_date: endDate,
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
       });
+
       setOrder(response);
+      console.log("Order Created:", response);
+      console.log("Start Date:", formattedStartDate);
+      console.log("End Date:", formattedEndDate);
+      console.log("Start Date:", typeof formattedStartDate);
+      console.log("End Date:", typeof formattedEndDate);
       clearCart();
     } finally {
       setSubmitting(false);
