@@ -14,6 +14,8 @@ export interface Product {
 interface CreateOrder {
   email: string;
   products: Array<{ product_id: number; quantity: number }>;
+  start_date: Date;
+  end_date: Date;
 }
 
 export interface Order {

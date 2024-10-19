@@ -12,6 +12,7 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import CartModal from "../screens/CartModal";
 import Login from "../auth/Login";
 import SignUp from "../auth/SignUp";
+import Profile from "../screens/Profile";
 
 type ProductsStackParamList = {
   Products: undefined;
@@ -19,6 +20,7 @@ type ProductsStackParamList = {
   CartModal: undefined;
   Login: undefined;
   SignUp: undefined;
+  Profile: undefined;
 };
 
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
@@ -42,7 +44,7 @@ const CartButton = () => {
 
   useEffect(() => {
     const count = products.reduce(
-      (prev, products) => prev + products.quantity,
+      (prev, product) => prev + product.quantity,
       0
     );
     setCount(count);
@@ -62,6 +64,21 @@ const CartButton = () => {
   );
 };
 
+const ProfileButton = () => {
+  const navigation = useNavigation<StackNavigation>();
+
+  return (
+    <TouchableOpacity
+      onPress={() => {
+        navigation.navigate("Profile");
+      }}
+      style={styles.profileButton}
+    >
+      <Ionicons name="person" size={28} color={"#000"} />
+    </TouchableOpacity>
+  );
+};
+
 const ProductsStackNav = () => {
   return (
     <ProductsStack.Navigator
@@ -70,7 +87,12 @@ const ProductsStackNav = () => {
           backgroundColor: "#1FE687",
         },
         headerTintColor: "#141414",
-        headerRight: () => <CartButton />,
+        headerRight: () => (
+          <View style={styles.headerRightContainer}>
+            <CartButton />
+            <ProfileButton />
+          </View>
+        ),
       }}
     >
       <ProductsStack.Screen
@@ -98,6 +120,11 @@ const ProductsStackNav = () => {
         component={CartModal}
         options={{ headerShown: false, presentation: "modal" }}
       />
+      <ProductsStack.Screen
+        name="Profile"
+        component={Profile}
+        options={{ headerTitle: "Profile" }}
+      />
     </ProductsStack.Navigator>
   );
 };
@@ -118,6 +145,13 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 12,
     fontWeight: "bold",
+  },
+  headerRightContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profileButton: {
+    marginLeft: 20,
   },
 });
 
