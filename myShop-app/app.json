@@ -11,21 +11,36 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+       "bundleIdentifier": "com.myshop.app",
+       "googleServicesFile"  :"./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+        "package": "com.myshop.app",
+        "googleServicesFile" : "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "plugins": [
+      ["expo-build-properties", {
+        "ios" :{
+          "useFrameworks" :  "static"
+        }
+      }],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ]
   }
 }

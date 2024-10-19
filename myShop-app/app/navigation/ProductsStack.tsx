@@ -10,11 +10,15 @@ import { Ionicons } from "@expo/vector-icons";
 import useCartStore from "@/state/cartStore";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import CartModal from "../screens/CartModal";
+import Login from "../auth/Login";
+import SignUp from "../auth/SignUp";
 
 type ProductsStackParamList = {
   Products: undefined;
   ProductDetails: { id: number };
   CartModal: undefined;
+  Login: undefined;
+  SignUp: undefined;
 };
 
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
@@ -69,6 +73,16 @@ const ProductsStackNav = () => {
         headerRight: () => <CartButton />,
       }}
     >
+      <ProductsStack.Screen
+        name="Login"
+        component={Login}
+        options={{ headerTitle: "Login" }}
+      />
+      <ProductsStack.Screen
+        name="SignUp"
+        component={SignUp}
+        options={{ headerTitle: "Sign Up" }}
+      />
       <ProductsStack.Screen
         name="Products"
         component={Products}

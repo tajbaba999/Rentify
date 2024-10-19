@@ -10,10 +10,14 @@ import {
 } from "react-native";
 import { fetchProducts } from "@/api/api";
 import { ProductsPageProps } from "@/navigation/ProductsStack";
+import { useNavigation } from "@react-navigation/native";
+import auth from "firebaseConfig";
 
 const Products = ({ navigation }: ProductsPageProps) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // const navigation = useNavigation();
 
   useEffect(() => {
     const load = async () => {
@@ -22,6 +26,15 @@ const Products = ({ navigation }: ProductsPageProps) => {
       setLoading(false);
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
+        navigation.navigate("Login");
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const renderProductItem = ({ item }) => (
