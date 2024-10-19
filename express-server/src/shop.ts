@@ -33,7 +33,6 @@ router.get("/hello", (req, res) => {
   res.json({ send: "Hello world" });
 });
 
-// Get a single product by ID
 router.get("/products/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -47,30 +46,39 @@ router.get("/products/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Create a new order with multiple products and a user email
 router.post("/orders", async (req: Request, res: Response) => {
   try {
-    const { email, products: orderBody } = req.body;
+    const { email, products: orderBody, start_date, end_date } = req.body;
 
     const order = await db.transaction(async (trx) => {
       const [newOrder] = await trx
         .insert(orders)
-        .values({ customer_email: email })
+        .values({
+          customer_email: email,
+          start_date,
+          end_date,
+        })
         .returning();
+
       const productPrices = await Promise.all(
         orderBody.map(async (orderItem: any) => {
           const [res] = await db
             .select()
             .from(products)
             .where(eq(products.id, +orderItem.product_id));
+          if (!res) {
+            throw new Error(
+              `Product with id ${orderItem.product_id} not found`
+            );
+          }
           return res.product_price;
         })
       );
 
       const orderProducts = await Promise.all(
         orderBody.map(async (orderItem: any, index: number) => {
-          const total = (+productPrices[index] * +orderItem.quantity).toFixed(
-            2
+          const total = parseFloat(
+            (+productPrices[index] * +orderItem.quantity).toFixed(2)
           );
           const [orderProduct] = await trx
             .insert(order_items)
@@ -85,18 +93,22 @@ router.post("/orders", async (req: Request, res: Response) => {
         })
       );
 
-      // Update the total price of the order
-      const total = orderProducts.reduce((acc: number, curr: OrderItem) => {
-        return acc + curr.total;
-      }, 0);
+      const total = parseFloat(
+        orderProducts
+          .reduce((acc: number, curr: OrderItem) => {
+            return acc + curr.total;
+          }, 0)
+          .toFixed(2)
+      );
 
       const [updatedOrder] = await trx
         .update(orders)
-        .set({ total: total.toFixed(2) })
+        .set({ total })
         .where(eq(orders.id, newOrder.id))
         .returning();
       return { ...updatedOrder, products: orderProducts };
     });
+
     res.json(order);
   } catch (err) {
     handleQueryError(err, res);
@@ -167,6 +179,15 @@ router.put("/products/:id", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/orders", async (req: Request, res: Response) => {
+  try {
+    const rows = await db.select().from(orders);
+    res.json(rows);
+  } catch (err) {
+    handleQueryError(err, res);
+  }
+});
+
 router.delete("/products/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -180,7 +201,7 @@ router.delete("/products/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Product not found." });
     }
 
-    res.status(204).send(); 
+    res.status(204).send();
   } catch (err) {
     handleQueryError(err, res);
   }
