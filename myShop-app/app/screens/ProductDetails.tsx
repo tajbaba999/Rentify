@@ -91,7 +91,6 @@ const ProductDetails = ({ route }) => {
     <ScrollView style={styles.scrollContainer}>
       <View style={styles.container}>
         {loading ? (
-          //shows Activityindiactor while loading
           <View style={styles.containerloading}>
             <ActivityIndicator size={"large"} color={"#1FE687"} />
           </View>
@@ -131,28 +130,26 @@ const ProductDetails = ({ route }) => {
               </View>
 
               {/* Start Date Selection */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.selectButton}
-                onPress={showStartDatePicker} // Show date picker on button press
+                onPress={showStartDatePicker}
               >
                 <Text style={styles.buttonText}>
-                  {startDate
-                    ? `Start Date: ${startDate}` // Display the selected start date
-                    : "Select Start Date"}
+                  {startDate ? `Start Date: ${startDate}` : "Select Start Date"}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               {/* DateTimePicker for Start Date */}
-              <DateTimePickerModal
+              {/* <DateTimePickerModal
                 isVisible={isStartDatePickerVisible}
                 mode="date"
                 onConfirm={handleStartConfirm} // Handle date selection
                 onCancel={hideStartDatePicker} // Hide picker on cancel
                 minimumDate={new Date()}
-              />
+              /> */}
 
               {/* End Date Selection */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[styles.selectButton, { opacity: startDate ? 1 : 0.6 }]}
                 onPress={showEndDatePicker}
                 disabled={!startDate}
@@ -160,24 +157,24 @@ const ProductDetails = ({ route }) => {
                 <Text style={styles.buttonText}>
                   {endDate ? `End Date: ${endDate}` : "Select End Date"}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
               {/* DateTimePicker for End Date */}
-              <DateTimePickerModal
+              {/* <DateTimePickerModal
                 isVisible={isEndDatePickerVisible}
                 mode="date"
                 onConfirm={handleEndConfirm} // Handle date selection
                 onCancel={hideEndDatePicker} // Hide picker on cancel
                 minimumDate={new Date()}
-              />
+              /> */}
 
               {/* Display Selected Date Range */}
-              {startDate && endDate && (
+              {/* {startDate && endDate && (
                 <Text style={styles.dateRangeText}>
                   Selected Range: {startDate.toLocaleDateString()} -{" "}
                   {endDate.toLocaleDateString()}
                 </Text>
-              )}
+              )} */}
             </>
           )
         )}
