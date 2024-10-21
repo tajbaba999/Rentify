@@ -32,7 +32,7 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} dark`}>
           <div className="top-bar">
-            <h1 className="top-bar-title">Welcome to Rentify</h1>
+            <h1 className="top-bar-title"></h1>
             <div className="user-button">
               <UserButton />
             </div>
