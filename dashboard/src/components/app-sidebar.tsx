@@ -1,4 +1,10 @@
-import { ShoppingCart, Home, ShoppingBasket, Settings } from "lucide-react";
+import {
+  ShoppingCart,
+  CirclePlus,
+  Home,
+  ShoppingBasket,
+  Settings,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -22,6 +28,11 @@ const items = [
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
+  },
+  {
+    title: "Add Products",
+    url: "/add-products",
+    icon: CirclePlus,
   },
   {
     title: "Products",
