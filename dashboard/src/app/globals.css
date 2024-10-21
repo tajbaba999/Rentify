@@ -91,6 +91,26 @@ body {
   }
 }
 
+.top-bar {
+  background: linear-gradient(to right, #f0f2f0, #000c40); /* Night Blue color */
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.top-bar-title {
+  color: rgb(32, 3, 3);
+  font-size: 24px;
+  margin-left: 70px;
+  font-family: "Arial, sans-serif";
+}
+
+.user-button {
+  margin-right: 20px;
+}
+
 @layer base {
   * {
     @apply border-border;
