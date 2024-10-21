@@ -25,3 +25,10 @@ body {
     text-wrap: balance;
   }
 }
+
+.header {
+  display: flex;
+  justify-content: flex-end; 
+  padding: 1rem; 
+  position: relative; 
+}
