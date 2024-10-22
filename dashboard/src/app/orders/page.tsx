@@ -49,7 +49,7 @@ const Orders = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-zinc-900">
+      <div className="flex items-center justify-center h-screen pl-72">
         <div className="loader"></div> {/* Add your loading spinner here */}
       </div>
     );
