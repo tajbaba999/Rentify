@@ -25,7 +25,7 @@ const Products = () => {
 
   if (loading) {
     return (
-      <div className="flex ml-24 pl-52 dark:bg-zinc-900 items-center justify-center  h-screen w-full">
+      <div className="flex ml-24 pl-52 items-center justify-center  h-screen w-full">
         <div className="loader"></div> {/* Circle loader instead of text */}
       </div>
     );

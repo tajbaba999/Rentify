@@ -316,7 +316,7 @@ export default function Home() {
             Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
           </div>
           <div className="leading-none text-muted-foreground">
-            Showing total visitors for the last 6 months
+            Showing total Sales for the last 6 months
           </div>
         </CardFooter>
       </Card>
