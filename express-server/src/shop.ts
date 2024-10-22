@@ -48,14 +48,8 @@ router.get("/products/:id", async (req: Request, res: Response) => {
 
 router.post("/orders", async (req: Request, res: Response) => {
   try {
-    const {
-      email,
-      products: orderBody,
-      start_date,
-      end_date,
-      productIdsArray,
-      orderTotal,
-    } = req.body;
+    const { email, start_date, end_date, productIdsArray, orderTotal } =
+      req.body;
 
     // Validate the product IDs
     if (!Array.isArray(productIdsArray) || productIdsArray.some(isNaN)) {
@@ -77,16 +71,15 @@ router.post("/orders", async (req: Request, res: Response) => {
         })
         .returning();
 
+      // Get the prices for the products using the productIdsArray
       const productPrices = await Promise.all(
-        orderBody.map(async (orderItem: any) => {
+        productIdsArray.map(async (productId: number) => {
           const [res] = await db
             .select()
             .from(products)
-            .where(eq(products.id, +orderItem.product_id));
+            .where(eq(products.id, productId));
           if (!res) {
-            throw new Error(
-              `Product with id ${orderItem.product_id} not found`
-            );
+            throw new Error(`Product with id ${productId} not found`);
           }
           return res.product_price;
         })
@@ -95,9 +88,8 @@ router.post("/orders", async (req: Request, res: Response) => {
       // Calculate the overall total
       const total = parseFloat(
         productPrices
-          .reduce((acc: number, currPrice: number, index: number) => {
-            const quantity = +orderBody[index].quantity;
-            return acc + currPrice * quantity;
+          .reduce((acc: number, currPrice: number) => {
+            return acc + currPrice;
           }, 0)
           .toFixed(2)
       );
