@@ -3,6 +3,7 @@ import {
   doublePrecision,
   integer,
   pgTable,
+  primaryKey,
   serial,
   text,
   varchar,
@@ -24,20 +25,24 @@ export const orders = pgTable("orders", {
   total: doublePrecision("total").default(0),
   start_date: varchar("start_date", { length: 50 }),
   end_date: varchar("end_date", { length: 50 }),
+  product_ids: integer("product_ids").array().notNull(),
 });
 
-export const order_items = pgTable("order_items", {
-  id: serial("id").primaryKey(),
-  order_id: integer("order_id")
-    .notNull()
-    .references(() => orders.id),
-  product_id: integer("product_id")
-    .notNull()
-    .references(() => products.id),
-  quantity: integer("quantity").notNull(),
-  total: doublePrecision("total").default(0),
-});
+export const order_products = pgTable(
+  "order_products",
+  {
+    order_id: integer("order_id")
+      .notNull()
+      .references(() => orders.id),
+    product_id: integer("product_id")
+      .notNull()
+      .references(() => products.id),
+    quantity: integer("quantity").notNull(),
+  },
+  (table) => ({
+    pk: primaryKey(table.order_id, table.product_id),
+  })
+);
 
 export type Product = InferModel<typeof products>;
 export type Order = InferModel<typeof orders>;
-export type OrderItem = InferModel<typeof order_items>;

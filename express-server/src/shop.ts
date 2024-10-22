@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import { eq } from "drizzle-orm";
 const router = express.Router();
 import { drizzle } from "drizzle-orm/node-postgres";
-import { OrderItem, order_items, orders, products } from "./db/schema";
+import { orders, products } from "./db/schema";
 
 const pool = new Pool({
   connectionString: `${process.env.DATABASE_URL}`,
@@ -48,8 +48,23 @@ router.get("/products/:id", async (req: Request, res: Response) => {
 
 router.post("/orders", async (req: Request, res: Response) => {
   try {
-    const { email, products: orderBody, start_date, end_date } = req.body;
+    const {
+      email,
+      products: orderBody,
+      start_date,
+      end_date,
+      productIdsArray,
+      orderTotal,
+    } = req.body;
 
+    // Validate the product IDs
+    if (!Array.isArray(productIdsArray) || productIdsArray.some(isNaN)) {
+      return res
+        .status(400)
+        .json({ error: "productIdsArray must be an array of integers." });
+    }
+
+    // Perform the transaction to create the order
     const order = await db.transaction(async (trx) => {
       const [newOrder] = await trx
         .insert(orders)
@@ -57,6 +72,8 @@ router.post("/orders", async (req: Request, res: Response) => {
           customer_email: email,
           start_date,
           end_date,
+          product_ids: productIdsArray,
+          total: orderTotal,
         })
         .returning();
 
@@ -75,105 +92,27 @@ router.post("/orders", async (req: Request, res: Response) => {
         })
       );
 
-      const orderProducts = await Promise.all(
-        orderBody.map(async (orderItem: any, index: number) => {
-          const total = parseFloat(
-            (+productPrices[index] * +orderItem.quantity).toFixed(2)
-          );
-          const [orderProduct] = await trx
-            .insert(order_items)
-            .values({
-              order_id: newOrder.id,
-              product_id: orderItem.product_id,
-              quantity: orderItem.quantity,
-              total: +total,
-            })
-            .returning();
-          return orderProduct;
-        })
-      );
-
+      // Calculate the overall total
       const total = parseFloat(
-        orderProducts
-          .reduce((acc: number, curr: OrderItem) => {
-            return acc + curr.total;
+        productPrices
+          .reduce((acc: number, currPrice: number, index: number) => {
+            const quantity = +orderBody[index].quantity;
+            return acc + currPrice * quantity;
           }, 0)
           .toFixed(2)
       );
 
+      // Update the total in the orders table
       const [updatedOrder] = await trx
         .update(orders)
         .set({ total })
         .where(eq(orders.id, newOrder.id))
         .returning();
-      return { ...updatedOrder, products: orderProducts };
+
+      return updatedOrder;
     });
 
     res.json(order);
-  } catch (err) {
-    handleQueryError(err, res);
-  }
-});
-
-router.post("/products", async (req: Request, res: Response) => {
-  try {
-    const {
-      product_name,
-      product_category,
-      product_description,
-      product_price,
-      product_stock,
-      product_image,
-    } = req.body;
-
-    const [newProduct] = await db
-      .insert(products)
-      .values({
-        product_name,
-        product_category,
-        product_description,
-        product_price,
-        product_stock,
-        product_image,
-      })
-      .returning();
-
-    res.status(201).json(newProduct);
-  } catch (error) {
-    handleQueryError(error, res);
-  }
-});
-
-router.put("/products/:id", async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const {
-      product_name,
-      product_category,
-      product_description,
-      product_price,
-      product_stock,
-      product_image,
-    } = req.body;
-
-    const [updatedProduct] = await db
-      .update(products)
-      .set({
-        product_name,
-        product_category,
-        product_description,
-        product_price,
-        product_stock,
-        product_image,
-      })
-      .where(eq(products.id, +id))
-      .returning();
-
-    if (!updatedProduct) {
-      return res.status(404).json({ error: "Product not found." });
-    }
-
-    res.json(updatedProduct);
   } catch (err) {
     handleQueryError(err, res);
   }
