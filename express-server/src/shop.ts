@@ -119,6 +119,25 @@ router.get("/orders", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/orders/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deletedOrder = await db
+      .delete(orders)
+      .where(eq(orders.id, +id))
+      .returning();
+
+    if (deletedOrder.length === 0) {
+      return res.status(404).json({ error: "Order not found." });
+    }
+
+    res.status(200).json({ message: "Order deleted successfully." });
+  } catch (err) {
+    handleQueryError(err, res);
+  }
+});
+
 router.delete("/products/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
