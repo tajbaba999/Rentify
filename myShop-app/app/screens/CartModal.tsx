@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  ScrollView,
 } from "react-native";
 import useCartStore from "@/state/cartStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +33,12 @@ const CartScreen = () => {
   const [email, setEmail] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  //house fields
+  const [houseNumber, setHouseNumber] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [country, setCountry] = useState("");
+  const [pincode, setPincode] = useState("");
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -44,7 +51,6 @@ const CartScreen = () => {
     setSubmitting(true);
     Keyboard.dismiss();
     try {
-      // Convert dates to string format using dayjs (e.g., 'YYYY-MM-DD')
       const formattedStartDate = startDate
         ? dayjs(startDate).format("YYYY-MM-DD")
         : null;
@@ -52,22 +58,24 @@ const CartScreen = () => {
         ? dayjs(endDate).format("YYYY-MM-DD")
         : null;
 
-      const response = await createOrder({
+      const orderData: any = {
         email,
-        products: products.map((product) => ({
-          product_id: product.id,
-          quantity: product.quantity,
-        })),
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-      });
+        productIdsArray: products.map((product) => product.id),
+        orderTotal: total,
+        house_number: houseNumber,
+        city,
+        state,
+        country,
+        pincode,
+      };
+      console.log(orderData);
+
+      const response = await createOrder(orderData);
 
       setOrder(response);
       console.log("Order Created:", response);
-      console.log("Start Date:", formattedStartDate);
-      console.log("End Date:", formattedEndDate);
-      console.log("Start Date:", typeof formattedStartDate);
-      console.log("End Date:", typeof formattedEndDate);
       clearCart();
     } finally {
       setSubmitting(false);
@@ -103,105 +111,145 @@ const CartScreen = () => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={65}
         >
-          <Text style={styles.cartTitle}>Your Cart</Text>
-          {products.length === 0 && (
-            <Text style={{ textAlign: "center" }}>Your cart is empty!</Text>
-          )}
-          <FlatList
-            data={products}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.cartItemContainer}>
-                <Image
-                  style={styles.cartItemImage}
-                  source={{ uri: item.product_image }}
-                />
-                <View style={styles.itemContainer}>
-                  <Text style={styles.cartItemName}>{item.product_name}</Text>
-                  <Text>Price: ${item.product_price}</Text>
-                </View>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <TouchableOpacity
-                    onPress={() => reduceProduct(item)}
-                    style={{ padding: 10 }}
-                  >
-                    <Ionicons name="remove" size={20} color={"#000"} />
-                  </TouchableOpacity>
-                  <Text style={styles.cartItemQuantity}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    onPress={() => addProduct(item)}
-                    style={{ padding: 10 }}
-                  >
-                    <Ionicons name="add" size={20} color={"#000"} />
-                  </TouchableOpacity>
-                </View>
-              </View>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <Text style={styles.cartTitle}>Your Cart</Text>
+            {products.length === 0 && (
+              <Text style={{ textAlign: "center" }}>Your cart is empty!</Text>
             )}
-          />
-          <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
-
-          {/* Start Date Picker */}
-          <TouchableOpacity
-            onPress={() => setShowStartPicker(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateButtonText}>
-              {startDate
-                ? `Start: ${startDate.toLocaleDateString()}`
-                : "Select Start Date"}
-            </Text>
-          </TouchableOpacity>
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowStartPicker(false);
-                if (selectedDate) setStartDate(selectedDate);
-              }}
-              minimumDate={new Date()}
+            <FlatList
+              data={products}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.cartItemContainer}>
+                  <Image
+                    style={styles.cartItemImage}
+                    source={{ uri: item.product_image }}
+                  />
+                  <View style={styles.itemContainer}>
+                    <Text style={styles.cartItemName}>{item.product_name}</Text>
+                    <Text>Price: ${item.product_price}</Text>
+                  </View>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <TouchableOpacity
+                      onPress={() => reduceProduct(item)}
+                      style={{ padding: 10 }}
+                    >
+                      <Ionicons name="remove" size={20} color={"#000"} />
+                    </TouchableOpacity>
+                    <Text style={styles.cartItemQuantity}>{item.quantity}</Text>
+                    <TouchableOpacity
+                      onPress={() => addProduct(item)}
+                      style={{ padding: 10 }}
+                    >
+                      <Ionicons name="add" size={20} color={"#000"} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              ListFooterComponent={
+                <View style={styles.footer}>
+                  <Text style={styles.totalText}>
+                    Total: ${total.toFixed(2)}
+                  </Text>
+                  {/* Address Fields */}
+                  <TextInput
+                    style={styles.input}
+                    placeholder="House Number"
+                    onChangeText={setHouseNumber}
+                    value={houseNumber}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="City"
+                    onChangeText={setCity}
+                    value={city}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="State"
+                    onChangeText={setState}
+                    value={state}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Country"
+                    onChangeText={setCountry}
+                    value={country}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Pincode"
+                    keyboardType="numeric"
+                    onChangeText={setPincode}
+                    value={pincode}
+                  />
+                  {/* Date Pickers */}
+                  <TouchableOpacity
+                    onPress={() => setShowStartPicker(true)}
+                    style={styles.dateButton}
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {startDate
+                        ? `Start: ${startDate.toLocaleDateString()}`
+                        : "Select Start Date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showStartPicker && (
+                    <DateTimePicker
+                      value={startDate || new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => {
+                        setShowStartPicker(false);
+                        if (selectedDate) setStartDate(selectedDate);
+                      }}
+                      minimumDate={new Date()}
+                    />
+                  )}
+                  <TouchableOpacity
+                    onPress={() => setShowEndPicker(true)}
+                    style={styles.dateButton}
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {endDate
+                        ? `End: ${endDate.toLocaleDateString()}`
+                        : "Select End Date"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showEndPicker && (
+                    <DateTimePicker
+                      value={endDate || new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => {
+                        setShowEndPicker(false);
+                        if (selectedDate) setEndDate(selectedDate);
+                      }}
+                      minimumDate={new Date()}
+                    />
+                  )}
+                  <TextInput
+                    style={styles.emailInput}
+                    placeholder="Enter your email"
+                    onChangeText={setEmail}
+                    value={email}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.submitButton,
+                      email === "" ? styles.inactive : null,
+                    ]}
+                    onPress={onSubmitOrder}
+                    disabled={email === "" || submitting}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {submitting ? "Creating Order..." : "Submit Order"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              }
             />
-          )}
-
-          {/* End Date Picker */}
-          <TouchableOpacity
-            onPress={() => setShowEndPicker(true)}
-            style={styles.dateButton}
-          >
-            <Text style={styles.dateButtonText}>
-              {endDate
-                ? `End: ${endDate.toLocaleDateString()}`
-                : "Select End Date"}
-            </Text>
-          </TouchableOpacity>
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowEndPicker(false);
-                if (selectedDate) setEndDate(selectedDate);
-              }}
-              minimumDate={new Date()}
-            />
-          )}
-
-          <TextInput
-            style={styles.emailInput}
-            placeholder="Enter your email"
-            onChangeText={setEmail}
-          />
-          <TouchableOpacity
-            style={[styles.submitButton, email === "" ? styles.inactive : null]}
-            onPress={onSubmitOrder}
-            disabled={email === "" || submitting}
-          >
-            <Text style={styles.submitButtonText}>
-              {submitting ? "Creating Order..." : "Submit Order"}
-            </Text>
-          </TouchableOpacity>
+          </ScrollView>
         </KeyboardAvoidingView>
       )}
     </View>
@@ -318,6 +366,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
     textAlign: "center",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    marginTop: 10,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  footer: {
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderColor: "#e0e0e0",
+    marginTop: 20,
   },
 });
 

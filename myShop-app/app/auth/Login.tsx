@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import auth from "../../firebaseConfig";
+import AppTextInput from "../components/AppTextInput"; // Custom input component
+import Spacing from "../constants/Spacing";
+import FontSize from "../constants/FontSize";
+import Colors from "../constants/Colors";
+import Font from "../constants/Font";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -28,38 +33,72 @@ const Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-      />
-      <TextInput
+      <Text style={styles.title}>Log in</Text>
+
+      <AppTextInput placeholder="Email" value={email} onChangeText={setEmail} />
+
+      <AppTextInput
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        style={styles.input}
       />
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button title="Login" onPress={handleLogin} />
-      <Button title="Sign Up" onPress={() => navigation.navigate("SignUp")} />
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.signupButton]}
+        onPress={() => navigation.navigate("SignUp")}
+      >
+        <Text style={styles.buttonText}>Sign Up</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, marginBottom: 20 },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 8,
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: Spacing * 2,
   },
-  error: { color: "red" },
+  title: {
+    fontSize: FontSize.xLarge,
+    fontFamily: Font["poppins-bold"],
+    color: Colors.primary,
+    textAlign: "center",
+    marginBottom: Spacing * 3,
+    fontWeight: "bold",
+  },
+  error: {
+    color: Colors.error,
+    fontSize: FontSize.small,
+    textAlign: "center",
+    marginBottom: Spacing,
+  },
+  button: {
+    backgroundColor: Colors.primary,
+    padding: Spacing * 2,
+    borderRadius: Spacing,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: Spacing },
+    shadowOpacity: 0.3,
+    shadowRadius: Spacing,
+    marginVertical: Spacing,
+  },
+  buttonText: {
+    color: Colors.onPrimary,
+    fontFamily: Font["poppins-bold"],
+    fontSize: FontSize.large,
+    textAlign: "center",
+  },
+  signupButton: {
+    backgroundColor: Colors.secondary,
+  },
 });
 
 export default Login;

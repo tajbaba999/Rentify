@@ -1,5 +1,5 @@
 // const API_URL = process.env.EXPO_PUBLIC_API_URL;
-const API_URL = "http://192.168.0.125:3000";
+const API_URL = "http://192.168.0.119:8000";
 
 export interface Product {
   id: number;
@@ -16,6 +16,11 @@ interface CreateOrder {
   products: Array<{ product_id: number; quantity: number }>;
   start_date: string;
   end_date: string;
+  house_number: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
 }
 
 export interface Order {
