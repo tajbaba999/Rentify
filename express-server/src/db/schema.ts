@@ -26,6 +26,13 @@ export const orders = pgTable("orders", {
   start_date: varchar("start_date", { length: 50 }),
   end_date: varchar("end_date", { length: 50 }),
   product_ids: integer("product_ids").array().notNull(),
+
+  // New fields added
+  house_number: varchar("house_number", { length: 50 }).notNull(),
+  city: varchar("city", { length: 50 }).notNull(),
+  state: varchar("state", { length: 50 }).notNull(),
+  country: varchar("country", { length: 50 }).notNull(),
+  pincode: varchar("pincode", { length: 10 }).notNull(),
 });
 
 export const order_products = pgTable(
