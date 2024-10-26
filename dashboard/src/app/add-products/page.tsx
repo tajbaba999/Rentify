@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import axios from "axios";
+import { Input } from "@/components/ui/input"; // Assuming you have a custom Input component
 
 const AddProducts = () => {
   const [productName, setProductName] = useState("");
@@ -10,69 +9,40 @@ const AddProducts = () => {
   const [productPrice, setProductPrice] = useState("");
   const [productStock, setProductStock] = useState("");
   const [productImage, setProductImage] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
-
-  const handleImageUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append(
-      "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
-    );
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-
-    if (!cloudName) {
-      console.error("Cloudinary cloud name is not defined.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Image upload failed");
-      }
-
-      const data = await response.json();
-      setImageUrl(data.secure_url); // Cloudinary returns a secure URL for the uploaded image
-    } catch (error) {
-      console.error("Error uploading image to Cloudinary:", error);
-    }
-  };
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (productImage) {
-      try {
-        await handleImageUpload(productImage);
+    if (!productImage) {
+      alert("Please select an image");
+      return;
+    }
 
-        const productData = {
-          productName,
-          productCategory,
-          productDescription,
-          productPrice,
-          productStock,
-          productImage: imageUrl,
-        };
+    const formData = new FormData();
+    formData.append("productName", productName);
+    formData.append("productCategory", productCategory);
+    formData.append("productDescription", productDescription);
+    formData.append("productPrice", productPrice);
+    formData.append("productStock", productStock);
+    formData.append("image", productImage); // Append the image file
 
-        console.log(productData);
+    try {
+      const response = await fetch("/api/addproducts", {
+        method: "POST",
+        body: formData,
+      });
 
-        await axios.post("/api/addproducts", productData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      } catch (error) {
-        console.error("Error submitting product:", error);
+      const data = await response.json();
+      if (response.ok) {
+        setSuccessMessage(data.message); // Show success message
+        alert("Product added successfully!"); // Show an alert with the message
+      } else {
+        alert("Failed to add product: " + data.message);
       }
+    } catch (error) {
+      console.error("Error submitting product:", error);
+      alert("An error occurred while adding the product.");
     }
   };
 
@@ -140,6 +110,7 @@ const AddProducts = () => {
           </div>
         ))}
 
+        {/* File Input for Image Upload */}
         <div className="flex flex-col">
           <label
             htmlFor="product_image"
@@ -168,6 +139,13 @@ const AddProducts = () => {
           Add Product
         </button>
       </form>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mt-4 p-4 bg-green-500 text-white rounded-md">
+          {successMessage}
+        </div>
+      )}
     </div>
   );
 };

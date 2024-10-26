@@ -3,25 +3,37 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const Orders = () => {
-  const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState({}); // To store products by their IDs
-  const [loading, setLoading] = useState(true); // Loading state
+interface Order {
+  id: number;
+  customer_email: string;
+  total: number;
+  start_date: string;
+  end_date: string;
+  product_ids: number[];
+  house_number: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
+
+const Orders: React.FC = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<{ [key: number]: any }>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch orders and products in parallel
         const [ordersResponse, productsResponse] = await Promise.all([
           axios.get("http://localhost:8000/orders"), // Adjust the endpoint as necessary
-          axios.get("http://localhost:8000/products"), // Adjust the endpoint as necessary
+          axios.get("http://localhost:8000/products"),
         ]);
 
-        // Set orders
         setOrders(ordersResponse.data);
 
         // Store products in an object for easy access by ID
-        const productsMap = {};
+        const productsMap: { [key: number] } = {};
         productsResponse.data.forEach((product) => {
           productsMap[product.id] = product;
         });
@@ -36,7 +48,7 @@ const Orders = () => {
     fetchData();
   }, []);
 
-  const deleteOrder = async (orderId) => {
+  const deleteOrder = async (orderId: number) => {
     try {
       await axios.delete(`http://localhost:8000/orders/${orderId}`); // Adjust the endpoint as necessary
       setOrders((prevOrders) =>
@@ -104,6 +116,28 @@ const Orders = () => {
                 ))}
               </ul>
             </div>
+
+            {/* Address Details */}
+            <div className="mt-4">
+              <h3 className="font-bold text-amber-500">Address Details:</h3>
+              <p>
+                <span className="text-blue-800">House Number:</span>{" "}
+                {order.house_number}
+              </p>
+              <p>
+                <span className="text-blue-800">City:</span> {order.city}
+              </p>
+              <p>
+                <span className="text-blue-800">State:</span> {order.state}
+              </p>
+              <p>
+                <span className="text-blue-800">Country:</span> {order.country}
+              </p>
+              <p>
+                <span className="text-blue-800">Pincode:</span> {order.pincode}
+              </p>
+            </div>
+
             <button
               className="mt-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
               onClick={() => deleteOrder(order.id)}
