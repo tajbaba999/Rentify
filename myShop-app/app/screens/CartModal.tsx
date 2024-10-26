@@ -70,7 +70,7 @@ const CartScreen = () => {
         country,
         pincode,
       };
-      console.log(orderData);
+      // console.log(orderData);
 
       const response = await createOrder(orderData);
 

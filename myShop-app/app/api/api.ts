@@ -16,11 +16,11 @@ interface CreateOrder {
   products: Array<{ product_id: number; quantity: number }>;
   start_date: string;
   end_date: string;
-  house_number: string;
-  city: string;
-  state: string;
-  country: string;
-  pincode: string;
+  house_number: string;  
+  city: string;         
+  state: string;        
+  country: string;      
+  pincode: string;      
 }
 
 export interface Order {
