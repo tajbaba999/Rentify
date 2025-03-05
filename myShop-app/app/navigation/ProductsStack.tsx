@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import useCartStore from "@/state/cartStore";
 import { Text } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
+import DocumentUploadScreen from "../screens/DocumentUploadScreen";
 
 type ProductsStackParamList = {
   Products: undefined;
@@ -22,6 +23,7 @@ type ProductsStackParamList = {
   Login: undefined;
   SignUp: undefined;
   Profile: undefined;
+  DocumentUpload: undefined;
 };
 
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
@@ -93,6 +95,15 @@ const ProductsStackNav = ({ user }) => {
             options={{ headerTitle: "Sign Up" }}
           />
         </>
+      ) : !user.documentsVerified ? (
+        <ProductsStack.Screen
+          name="DocumentUpload"
+          component={DocumentUploadScreen}
+          options={{ 
+            headerTitle: "Upload Documents",
+            headerLeft: () => null,
+          }}
+        />
       ) : (
         <>
           <ProductsStack.Screen
@@ -153,6 +164,10 @@ export type ProductsPageProps = NativeStackScreenProps<
 export type ProductDetailsPageProps = NativeStackScreenProps<
   ProductsStackParamList,
   "ProductDetails"
+>;
+export type DocumentUploadProps = NativeStackScreenProps<
+  ProductsStackParamList,
+  "DocumentUpload"
 >;
 
 export default ProductsStackNav;

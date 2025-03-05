@@ -12,14 +12,15 @@ if (process.env.NODE_ENV === "production") {
   dotenv.config({ path: ".dev.env" });
 }
 
-const { PORT } = process.env;
+const  PORT  = process.env.PORT || 8000;
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-import shopRouter from "./shop";
-app.use(shopRouter);
+// import shopRouter from "./shop";
+import shoproute from './shop/index';
+app.use(shoproute);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);

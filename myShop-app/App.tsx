@@ -1,24 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import ProductsStackNav from "./app/navigation/ProductsStack";
-import { onAuthStateChanged } from "firebase/auth";
-import auth from "./firebaseConfig";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 import { View, ActivityIndicator } from "react-native";
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User| null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
-      if (authUser) {
-        setUser(authUser);
-      } else {
-        setUser(null);
-      }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
       setLoading(false);
     });
 
+    // Cleanup subscription
     return () => unsubscribe();
   }, []);
 
