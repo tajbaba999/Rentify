@@ -1,5 +1,4 @@
 // import { timestamp as pgTimestamp } from "console";
-import { timeStamp } from "console";
 import { InferModel, sql } from "drizzle-orm";
 import {
   doublePrecision,
@@ -54,15 +53,15 @@ export const order_products = pgTable(
   })
 );
 
-export const userUploads = pgTable("user_uploadds", {
-    id : serial("id").primaryKey(),
-    email : text("email").notNull(),
-    user_id : text("user_id").notNull(),
-    file_url : text("file_url").notNull(),
-    created_at: timestamp("created_at").default(sql`NOW()`), 
+export const userUploads = pgTable("user_uploads", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  user_id: text("user_id").notNull(),
+  file_url: text("file_url").notNull(),
+  created_at: timestamp("created_at").default(sql`NOW()`), 
 });
 
 
-export type Uploadds = InferModel<typeof userUploads>;
+export type UserUpload = InferModel<typeof userUploads>;
 export type Product = InferModel<typeof products>;
 export type Order = InferModel<typeof orders>;
