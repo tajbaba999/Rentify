@@ -4,6 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "../../firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
+// import { useNavigation } from "@react-navigation/native";
 
 interface Document {
   uri: string;
@@ -12,6 +13,8 @@ interface Document {
 }
 
 const DocumentUploadScreen = ({ navigation }) => {
+  // const navigation = useNavigation();
+
   const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -80,21 +83,18 @@ const DocumentUploadScreen = ({ navigation }) => {
       formData.append("email", email);
 
       // POST the data to the /upload endpoint
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`http://192.168.1.2:8000/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-
-      Alert.alert("Success", "Document uploaded successfully.", [
-        { text: "OK", onPress: () => navigation.replace("Products") },
-      ]);
+      console.log("Upload successful, navigating to Products...");
+      setTimeout(() => {
+        navigation.navigate("Products");
+      }, 500);
     } catch (error) {
       console.error("Error during document submission:", error);
       Alert.alert("Error", "Failed to upload document. Please try again.");
@@ -125,7 +125,7 @@ const DocumentUploadScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Upload Your Document</Text>
       <Text style={styles.subtitle}>
-        Please upload a clear copy of your document (PDF or Image)
+        Please upload a clear copy of your document ( Image)
       </Text>
 
       <View style={styles.documentContainer}>
