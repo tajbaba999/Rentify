@@ -23,7 +23,8 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "permissions": ["INTERNET", "READ_EXTERNAL_STORAGE"]
       },
       "package": "com.myshop.app",
       "googleServicesFile": "./google-services.json"
