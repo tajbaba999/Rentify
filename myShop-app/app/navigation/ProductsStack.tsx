@@ -99,7 +99,7 @@ const ProductsStackNav = ({ user }) => {
         <ProductsStack.Screen
           name="DocumentUpload"
           component={DocumentUploadScreen}
-          options={{ 
+          options={{
             headerTitle: "Upload Documents",
             headerLeft: () => null,
           }}
@@ -114,7 +114,7 @@ const ProductsStackNav = ({ user }) => {
           <ProductsStack.Screen
             name="ProductDetails"
             component={ProductDetails}
-            options={{ headerTitle: "" }}
+            options={{ headerTitle: "ProductDetails" }}
           />
           <ProductsStack.Screen
             name="CartModal"

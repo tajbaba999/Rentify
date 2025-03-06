@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import * as DocumentPicker from 'expo-document-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storage } from '../../firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db } from '../../firebaseConfig';
-import { doc, updateDoc } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons';
-
-type DocumentType = 'aadhar' | 'pan';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import * as DocumentPicker from "expo-document-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth } from "../../firebaseConfig";
+import { Ionicons } from "@expo/vector-icons";
 
 interface Document {
   uri: string;
@@ -17,134 +12,110 @@ interface Document {
 }
 
 const DocumentUploadScreen = ({ navigation }) => {
-  const [documents, setDocuments] = useState<{ [key in DocumentType]?: Document }>({});
+  const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadDocuments = async () => {
+    const loadDocument = async () => {
       try {
-        const storedDocs = await AsyncStorage.getItem('documents');
-        if (storedDocs) {
-          setDocuments(JSON.parse(storedDocs));
+        const storedDoc = await AsyncStorage.getItem("document");
+        if (storedDoc) {
+          setDocument(JSON.parse(storedDoc));
         }
       } catch (error) {
-        console.error('Error loading documents:', error);
+        console.error("Error loading document:", error);
       }
     };
 
-    loadDocuments();
+    loadDocument();
   }, []);
 
-  const pickDocument = async (type: DocumentType) => {
+  const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: "*/*",
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets?.length > 0) {
         const selectedFile = result.assets[0];
-  
-        const newDocument = {
+
+        const newDocument: Document = {
           uri: selectedFile.uri,
           name: selectedFile.name,
-          type: selectedFile.mimeType || '',
+          type: selectedFile.mimeType || "",
         };
 
-        setDocuments(prev => {
-          const updatedDocs = { ...prev, [type]: newDocument };
-          AsyncStorage.setItem('documents', JSON.stringify(updatedDocs));
-          return updatedDocs;
-        });
+        setDocument(newDocument);
+        await AsyncStorage.setItem("document", JSON.stringify(newDocument));
       } else {
-        Alert.alert('No file selected', 'Please select a file to upload.');
+        Alert.alert("No file selected", "Please select a file to upload.");
       }
     } catch (error) {
-      console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick document');
-    }
-  };
-
-  const uploadDocument = async (uri: string, type: DocumentType) => {
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const userId = auth.currentUser?.uid;
-      if (!userId) throw new Error('User not authenticated');
-
-      const timestamp = new Date().getTime();
-      const fileExtension = documents[type]?.name.split('.').pop();
-      const fileName = `${type}_${timestamp}.${fileExtension}`;
-      const storageRef = ref(storage, `documents/${userId}/${fileName}`);
-
-      await uploadBytes(storageRef, blob);
-      const url = await getDownloadURL(storageRef);
-      return url;
-    } catch (error) {
-      console.error('Error uploading document:', error);
-      throw error;
+      console.error("Error picking document:", error);
+      Alert.alert("Error", "Failed to pick document");
     }
   };
 
   const handleSubmit = async () => {
-    if (!documents.aadhar || !documents.pan) {
-      Alert.alert('Error', 'Please upload both documents');
+    if (!document) {
+      Alert.alert("Error", "Please select a document");
       return;
     }
 
     setLoading(true);
     try {
-      const userId = auth.currentUser?.uid;
-      if (!userId) throw new Error('User not authenticated');
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+      const { uid, email } = user;
 
-      const aadharUrl = await uploadDocument(documents.aadhar.uri, 'aadhar');
-      const panUrl = await uploadDocument(documents.pan.uri, 'pan');
+      // Create FormData to send the file and user info
+      const formData = new FormData();
+      formData.append("file", {
+        uri: document.uri,
+        name: document.name,
+        type: document.type,
+      } as any);
+      formData.append("user_id", uid);
+      formData.append("email", email);
 
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        documents: {
-          aadhar: {
-            url: aadharUrl,
-            fileName: documents.aadhar.name,
-            uploadDate: new Date().toISOString(),
-          },
-          pan: {
-            url: panUrl,
-            fileName: documents.pan.name,
-            uploadDate: new Date().toISOString(),
-          },
-        },
-        documentsVerified: false,
-        documentUploadDate: new Date().toISOString(),
-      });
-
-      Alert.alert(
-        'Success',
-        'Documents uploaded successfully. Please wait for verification.',
-        [{ text: 'OK', onPress: () => navigation.replace('Products') }]
+      // POST the data to the /upload endpoint
+      const response = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
       );
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      Alert.alert("Success", "Document uploaded successfully.", [
+        { text: "OK", onPress: () => navigation.replace("Products") },
+      ]);
     } catch (error) {
-      console.error('Error during document submission:', error);
-      Alert.alert('Error', 'Failed to upload documents. Please try again.');
+      console.error("Error during document submission:", error);
+      Alert.alert("Error", "Failed to upload document. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderDocumentStatus = (type: DocumentType) => {
-    const doc = documents[type];
-    if (!doc) {
+  const renderDocumentStatus = () => {
+    if (!document) {
       return <Text>No file selected</Text>;
     }
     return (
       <View style={styles.fileInfo}>
         <Ionicons
-          name={doc.type.includes('pdf') ? 'document-text' : 'image'}
+          name={document.type.includes("pdf") ? "document-text" : "image"}
           size={24}
           color="#666"
         />
         <Text style={styles.fileName} numberOfLines={1}>
-          {doc.name}
+          {document.name}
         </Text>
       </View>
     );
@@ -152,28 +123,18 @@ const DocumentUploadScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Upload Your Documents</Text>
-      <Text style={styles.subtitle}>Please upload clear copies of your documents (PDF or Image)</Text>
+      <Text style={styles.title}>Upload Your Document</Text>
+      <Text style={styles.subtitle}>
+        Please upload a clear copy of your document (PDF or Image)
+      </Text>
 
       <View style={styles.documentContainer}>
-        <Text style={styles.label}>Aadhar Card</Text>
         <TouchableOpacity
           style={styles.uploadButton}
-          onPress={() => pickDocument('aadhar')}
+          onPress={pickDocument}
           disabled={loading}
         >
-          {renderDocumentStatus('aadhar')}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.documentContainer}>
-        <Text style={styles.label}>PAN Card</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => pickDocument('pan')}
-          disabled={loading}
-        >
-          {renderDocumentStatus('pan')}
+          {renderDocumentStatus()}
         </TouchableOpacity>
       </View>
 
@@ -183,7 +144,7 @@ const DocumentUploadScreen = ({ navigation }) => {
         disabled={loading}
       >
         <Text style={styles.submitButtonText}>
-          {loading ? 'Uploading...' : 'Submit Documents'}
+          {loading ? "Uploading..." : "Submit Document"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -194,62 +155,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 20,
   },
   documentContainer: {
     marginBottom: 20,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    fontWeight: '600',
-  },
   uploadButton: {
     height: 60,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     paddingHorizontal: 15,
   },
   fileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   fileName: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     flex: 1,
   },
   submitButton: {
-    backgroundColor: '#1FE687',
+    backgroundColor: "#1FE687",
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
   },
   disabledButton: {
     opacity: 0.7,
   },
   submitButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
