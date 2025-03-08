@@ -1,60 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import auth from "../../firebaseConfig";
+import React, { useState } from 'react';
+import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ProductsStackParamList } from '../navigation/ProductsStack';
 import AppTextInput from "../components/AppTextInput"; // Custom input component
 import Spacing from "../constants/Spacing";
 import FontSize from "../constants/FontSize";
 import Colors from "../constants/Colors";
 import Font from "../constants/Font";
 
-const Login = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+type LoginProps = NativeStackScreenProps<ProductsStackParamList, 'Login'>;
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigation.navigate("Products");
-      }
-    });
-    return () => unsubscribe();
-  }, [navigation]);
+const Login = ({ navigation }: LoginProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate("Products");
-    } catch (err) {
-      setError(err.message);
+      // Navigation will be handled by the auth state change in App.tsx
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Error', 'Failed to login. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Log in</Text>
-
-      <AppTextInput placeholder="Email" value={email} onChangeText={setEmail} />
-
-      <AppTextInput
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
-
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, styles.signupButton]}
-        onPress={() => navigation.navigate("SignUp")}
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Sign Up</Text>
+        <Text style={styles.buttonText}>
+          {loading ? 'Logging in...' : 'Login'}
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('SignUp')}
+        style={styles.signupLink}
+      >
+        <Text>Don't have an account? Sign Up</Text>
       </TouchableOpacity>
     </View>
   );
@@ -63,41 +75,32 @@ const Login = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: Spacing * 2,
+    padding: 20,
+    justifyContent: 'center',
   },
-  title: {
-    fontSize: FontSize.xLarge,
-    fontFamily: Font["poppins-bold"],
-    color: Colors.primary,
-    textAlign: "center",
-    marginBottom: Spacing * 3,
-    fontWeight: "bold",
-  },
-  error: {
-    color: Colors.error,
-    fontSize: FontSize.small,
-    textAlign: "center",
-    marginBottom: Spacing,
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 5,
   },
   button: {
-    backgroundColor: Colors.primary,
-    padding: Spacing * 2,
-    borderRadius: Spacing,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: Spacing },
-    shadowOpacity: 0.3,
-    shadowRadius: Spacing,
-    marginVertical: Spacing,
+    backgroundColor: '#1FE687',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
-    color: Colors.onPrimary,
-    fontFamily: Font["poppins-bold"],
-    fontSize: FontSize.large,
-    textAlign: "center",
+    color: '#fff',
+    fontWeight: 'bold',
   },
-  signupButton: {
-    backgroundColor: Colors.secondary,
+  signupLink: {
+    marginTop: 20,
+    alignItems: 'center',
   },
 });
 

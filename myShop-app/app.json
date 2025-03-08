@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -18,14 +19,17 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.myshop.app",
       "googleServicesFile": "./GoogleService-Info.plist"  // Add this if using Firebase on iOS
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "permissions": ["INTERNET", "READ_EXTERNAL_STORAGE"]
       },
       "package": "com.myshop.app",
       "googleServicesFile": "./google-services.json"  // Add this for Android Firebase config
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -49,6 +53,7 @@
     "extra": {
       "eas": {
         "projectId": "b5e72846-215d-4ed8-b5f1-0e348cf69f43"
+        "projectId": "your-project-id"
       }
     }
   }

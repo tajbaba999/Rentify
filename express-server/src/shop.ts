@@ -1,230 +1,235 @@
+// src/shop/index.ts
 import express, { Request, Response } from "express";
-import { Pool } from "pg";
-import { eq } from "drizzle-orm";
-const router = express.Router();
-import { drizzle } from "drizzle-orm/node-postgres";
-import { orders, products } from "./db/schema";
+import {
+  Product,
+  Order,
+  OrderProduct,
+  UserUpload,
+  IProduct,
+  IOrder,
+} from "./db/schema.js";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
 
-const pool = new Pool({
-  connectionString: `${process.env.DATABASE_URL}`,
-  ssl: { rejectUnauthorized: false },
+const router: express.Router = express.Router();
+
+// Configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-const db = drizzle(pool);
 
-// Error handler for database queries
-const handleQueryError = (err: any, res: Response) => {
-  console.error("Error executing query:", err);
-  res
-    .status(500)
-    .json({ error: "An error occurred while executing the query." });
-};
-
-interface CreateOrderRequest {
-  email: string;
-  start_date: string;
-  end_date: string;
-  productIdsArray: number[];
-  orderTotal: number;
-  house_number: string;
-  city: string;
-  state: string;
-  country: string;
-  pincode: string;
-}
-
-interface AddProductRequest {
-  productName: string;
-  productCategory: string;
-  productDescription?: string;
-  productPrice: number;
-  productStock: number;
-  productImage?: string;
-}
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Get all products
-router.get("/products", async (req: Request, res: Response) => {
+router.get("/products", async (req, res) => {
   try {
-    const rows = await db.select().from(products);
-    res.json(rows);
-  } catch (err) {
-    handleQueryError(err, res);
+    const products = await Product.find();
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
   }
 });
 
-router.get("/hello", (req, res) => {
-  res.json({ send: "Hello world" });
-});
-
-router.get("/products/:id", async (req: Request, res: Response) => {
+// Get product by ID
+router.get("/products/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const rows = await db.select().from(products).where(eq(products.id, +id));
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Product not found." });
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
     }
-    res.json(rows[0]);
-  } catch (err) {
-    handleQueryError(err, res);
+    res.json(product);
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    res.status(500).json({ error: "Failed to fetch product" });
   }
 });
 
-router.post(
-  "/orders",
-  async (req: Request<{}, {}, CreateOrderRequest>, res: Response) => {
-    try {
-      const {
-        email,
-        start_date,
-        end_date,
-        productIdsArray,
-        orderTotal,
-        house_number,
-        city,
-        state,
-        country,
-        pincode,
-      } = req.body;
+// Create new product
+router.post("/products", async (req, res) => {
+  try {
+    const newProduct = new Product(req.body);
+    await newProduct.save();
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(500).json({ error: "Failed to create product" });
+  }
+});
 
-      // Validate the product IDs
-      if (!Array.isArray(productIdsArray) || productIdsArray.some(isNaN)) {
-        return res
-          .status(400)
-          .json({ error: "productIdsArray must be an array of integers." });
+// Update product
+router.put("/products/:id", async (req, res) => {
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+// Delete product
+router.delete("/products/:id", async (req, res) => {
+  try {
+    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    res.json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+// Get all orders
+router.get("/orders", async (req, res) => {
+  try {
+    const orders = await Order.find();
+    res.json(orders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// Get order by ID with populated products
+router.get("/orders/:id", async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Get order products
+    const orderProducts = await OrderProduct.find({ order_id: order._id });
+
+    // Get all product details
+    const productsWithQuantity = await Promise.all(
+      orderProducts.map(async (op) => {
+        const product = await Product.findById(op.product_id);
+        return {
+          product,
+          quantity: op.quantity,
+        };
+      })
+    );
+
+    const orderWithProducts = order.toObject();
+    orderWithProducts.products = productsWithQuantity;
+
+    res.json(orderWithProducts);
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
+});
+
+// Create new order
+router.post("/orders", async (req, res) => {
+  try {
+    // Create the order first
+    const newOrder = new Order(req.body);
+    await newOrder.save();
+
+    // Create order-product relationships if products are provided
+    if (req.body.products && Array.isArray(req.body.products)) {
+      for (const item of req.body.products) {
+        const orderProduct = new OrderProduct({
+          order_id: newOrder._id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+        });
+        await orderProduct.save();
       }
-
-      const order = await db.transaction(async (trx) => {
-        const [newOrder] = await trx
-          .insert(orders)
-          .values({
-            customer_email: email,
-            start_date,
-            end_date,
-            product_ids: productIdsArray,
-            total: orderTotal,
-            house_number,
-            city,
-            state,
-            country,
-            pincode,
-          })
-          .returning();
-
-        const productPrices = await Promise.all(
-          productIdsArray.map(async (productId: number) => {
-            const [res] = await db
-              .select()
-              .from(products)
-              .where(eq(products.id, productId));
-            if (!res) throw new Error(`Product with id ${productId} not found`);
-            return res.product_price;
-          })
-        );
-
-        const total = parseFloat(
-          productPrices
-            .reduce((acc: number, currPrice: number) => acc + currPrice, 0)
-            .toFixed(2)
-        );
-
-        const [updatedOrder] = await trx
-          .update(orders)
-          .set({ total })
-          .where(eq(orders.id, newOrder.id))
-          .returning();
-
-        return updatedOrder;
-      });
-
-      res.status(201).json(order);
-    } catch (err) {
-      handleQueryError(err, res);
     }
-  }
-);
 
-// Add product
-router.post(
-  "/addproducts",
-  async (req: Request<{}, {}, AddProductRequest>, res: Response) => {
-    try {
-      const {
-        productName,
-        productCategory,
-        productDescription,
-        productPrice,
-        productStock,
-        productImage,
-      } = req.body;
-
-      if (!productName || !productCategory || !productPrice || !productStock) {
-        return res
-          .status(400)
-          .json({ error: "Missing required product details." });
-      }
-
-      const newProduct = await db
-        .insert(products)
-        .values({
-          product_name: productName,
-          product_category: productCategory,
-          product_description: productDescription,
-          product_price: productPrice,
-          product_stock: productStock,
-          product_image: productImage,
-        })
-        .returning();
-
-      res.status(201).json(newProduct);
-    } catch (err) {
-      handleQueryError(err, res);
-    }
-  }
-);
-
-router.get("/orders", async (req: Request, res: Response) => {
-  try {
-    const rows = await db.select().from(orders);
-    res.json(rows);
-  } catch (err) {
-    handleQueryError(err, res);
+    res.status(201).json(newOrder);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Failed to create order" });
   }
 });
 
-router.delete("/orders/:id", async (req: Request, res: Response) => {
+// Update order
+router.put("/orders/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const deletedOrder = await db
-      .delete(orders)
-      .where(eq(orders.id, +id))
-      .returning();
-
-    if (deletedOrder.length === 0) {
-      return res.status(404).json({ error: "Order not found." });
+    const updatedOrder = await Order.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedOrder) {
+      return res.status(404).json({ error: "Order not found" });
     }
-
-    res.status(200).json({ message: "Order deleted successfully." });
-  } catch (err) {
-    handleQueryError(err, res);
+    res.json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Failed to update order" });
   }
 });
 
-router.delete("/products/:id", async (req: Request, res: Response) => {
+// Delete order
+router.delete("/orders/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    // Delete order-product relationships first
+    await OrderProduct.deleteMany({ order_id: req.params.id });
 
-    const deletedProduct = await db
-      .delete(products)
-      .where(eq(products.id, +id))
-      .returning();
-
-    if (deletedProduct.length === 0) {
-      return res.status(404).json({ error: "Product not found." });
+    // Delete the order
+    const deletedOrder = await Order.findByIdAndDelete(req.params.id);
+    if (!deletedOrder) {
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    res.status(204).send();
-  } catch (err) {
-    handleQueryError(err, res);
+    res.json({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ error: "Failed to delete order" });
+  }
+});
+
+// Upload file endpoint
+router.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Convert buffer to base64 string for Cloudinary
+    const fileStr = Buffer.from(req.file.buffer).toString("base64");
+    const uploadResponse = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${fileStr}`,
+      { folder: "shop-uploads" }
+    );
+
+    // Save upload info to database
+    const newUpload = new UserUpload({
+      email: req.body.email,
+      user_id: req.body.user_id,
+      file_url: uploadResponse.secure_url,
+    });
+
+    await newUpload.save();
+
+    res.json({
+      message: "File uploaded successfully",
+      file_url: uploadResponse.secure_url,
+      upload_id: newUpload._id,
+    });
+  } catch (error) {
+    console.error("Error uploading file:", error);
+    res.status(500).json({ error: "Failed to upload file" });
   }
 });
 
