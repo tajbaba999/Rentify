@@ -276,4 +276,21 @@ router.get("/upload", async (req: Request, res: Response) => {
   }
 });
 
+router.delete("/:email", async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+
+    const result = await UserUpload.deleteOne({ email });
+
+    if (result.deletedCount && result.deletedCount > 0) {
+      res.status(200).json({ message: "Upload(s) deleted successfully" });
+    } else {
+      res.status(404).json({ error: "No uploads found for this email" });
+    }
+  } catch (error) {
+    console.error("Error deleting uploads:", error);
+    res.status(500).json({ error: "Failed to delete uploads" });
+  }
+});
+
 export default router;

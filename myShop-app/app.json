@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.myshop.app",
+      "googleServicesFile": "./GoogleService-Info.plist"  // Add this if using Firebase on iOS
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
@@ -27,6 +28,7 @@
         "permissions": ["INTERNET", "READ_EXTERNAL_STORAGE"]
       },
       "package": "com.myshop.app",
+      "googleServicesFile": "./google-services.json"  // Add this for Android Firebase config
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -36,6 +38,7 @@
       "tsconfigPaths": true
     },
     "plugins": [
+      "react-native-material-date-picker/plugin",
       [
         "expo-build-properties",
         {
@@ -49,6 +52,7 @@
     ],
     "extra": {
       "eas": {
+        "projectId": "b5e72846-215d-4ed8-b5f1-0e348cf69f43"
         "projectId": "your-project-id"
       }
     }

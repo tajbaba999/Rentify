@@ -4,6 +4,7 @@ import {
   Home,
   ShoppingBasket,
   Settings,
+  File,
 } from "lucide-react";
 
 import {
@@ -33,6 +34,11 @@ const items = [
     title: "Add Products",
     url: "/add-products",
     icon: CirclePlus,
+  },
+  {
+    title: "Dcouments",
+    url: "/documents",
+    icon: File,
   },
   {
     title: "Products",
