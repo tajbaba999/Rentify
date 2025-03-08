@@ -16,16 +16,16 @@
     ],
     "ios": {
       "supportsTablet": true,
-       "bundleIdentifier": "com.myshop.app",
-       "googleServicesFile"  :"./GoogleService-Info.plist"
+      "bundleIdentifier": "com.myshop.app",
+      "googleServicesFile": "./GoogleService-Info.plist"  // Add this if using Firebase on iOS
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-        "package": "com.myshop.app",
-        "googleServicesFile" : "./google-services.json"
+      "package": "com.myshop.app",
+      "googleServicesFile": "./google-services.json"  // Add this for Android Firebase config
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,13 +34,22 @@
       "tsconfigPaths": true
     },
     "plugins": [
-      ["expo-build-properties", {
-        "ios" :{
-          "useFrameworks" :  "static"
+      "react-native-material-date-picker/plugin",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
-      }],
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b5e72846-215d-4ed8-b5f1-0e348cf69f43"
+      }
+    }
   }
 }

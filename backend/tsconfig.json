@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+      "module": "ESNext",
+      "esModuleInterop": true,
+      "target": "es6",
+      "noImplicitAny": true,
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "outDir": "dist",
+      "baseUrl": "./",
+      "paths": {
+        "*": [
+          "node_modules/*"
+        ]
+      },
+      "lib": ["es2020"],
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "strictNullChecks": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "node_modules"
+    ],
+    "ts-node": {
+      "esm": true,
+      "experimentalSpecifierResolution": "node"
+    }
+  }
