@@ -11,19 +11,40 @@ import {
 import { fetchProducts } from "@/api/api";
 import { ProductsPageProps } from "@/navigation/ProductsStack";
 import { useNavigation } from "@react-navigation/native";
-import auth from "firebaseConfig";
+import { auth } from "../../firebaseConfig";
+
+interface Product {
+  id: number;
+  product_name: string;
+  product_category: string;
+  product_description: string;
+  product_price: number;
+  product_stock: number;
+  product_image: string;
+}
+
 
 const Products = ({ navigation }: ProductsPageProps) => {
-  const [products, setProducts] = useState([]);
+  const [user, setUser] = useState(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   // const navigation = useNavigation();
 
   useEffect(() => {
     const load = async () => {
-      const data = await fetchProducts();
-      setProducts(data);
-      setLoading(false);
+      try {
+        const data = await fetchProducts();
+        if (Array.isArray(data)) {
+          setProducts(data.filter((item) => item?.id)); 
+        } else {
+          console.error("Invalid product data:", data);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
@@ -37,7 +58,7 @@ const Products = ({ navigation }: ProductsPageProps) => {
     return unsubscribe;
   }, []);
 
-  const renderProductItem = ({ item }) => (
+  const renderProductItem = ({ item } : { item : Product}) => (
     <TouchableOpacity
       style={styles.productItem}
       onPress={() => navigation.navigate("ProductDetails", { id: item.id })}
@@ -58,7 +79,7 @@ const Products = ({ navigation }: ProductsPageProps) => {
         <FlatList
           data={products}
           renderItem={renderProductItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item?.id?.toString() ?? Math.random().toString()}
           numColumns={2}
         />
       )}

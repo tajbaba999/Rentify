@@ -67,13 +67,13 @@ const DocumentUploadScreen = ({ navigation }) => {
       Alert.alert("Error", "Please select a document");
       return;
     }
-
+  
     setLoading(true);
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("User not authenticated");
       const { uid, email } = user;
-
+  
       // Create FormData to send the file and user info
       const formData = new FormData();
       formData.append("file", {
@@ -83,19 +83,19 @@ const DocumentUploadScreen = ({ navigation }) => {
       } as any);
       formData.append("user_id", uid);
       formData.append("email", email);
-
+  
       // POST the data to the /upload endpoint
       const response = await fetch(`http://192.168.1.7:8000/upload`, {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-      
+  
       console.log("Upload successful");
-      
+  
       try {
         // Update the user data in AsyncStorage
         const userData = await AsyncStorage.getItem('user');
@@ -104,31 +104,15 @@ const DocumentUploadScreen = ({ navigation }) => {
           parsedUser.documentsVerified = true;
           await AsyncStorage.setItem('user', JSON.stringify(parsedUser));
         }
-        
-        // Instead of trying to navigate directly to Products,
-        // just reload the root component which will re-evaluate conditions
-        Alert.alert(
-          "Success", 
-          "Document uploaded successfully. App will restart to apply changes.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                navigation.dispatch(
-                  CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: 'Products' }], 
-                  })
-                );
-                
-                // Then reload the app after a brief delay
-                setTimeout(() => {
-                  DevSettings.reload(); 
-                }, 500);
-              }
-            }
-          ]
-        );
+  
+        Alert.alert("Success", "Document uploaded successfully.", [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.navigate("Products"); // Navigate to Products without refreshing
+            },
+          },
+        ]);
       } catch (error) {
         console.error("Error updating user verification status:", error);
         Alert.alert("Error", "Document uploaded but failed to update status");
@@ -140,6 +124,7 @@ const DocumentUploadScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+  
 
   const renderDocumentStatus = () => {
     if (!document) {
