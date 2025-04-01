@@ -60,14 +60,13 @@ const Products = ({ navigation }: ProductsPageProps) => {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
-      if (!currentUser) {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (!user) {
         navigation.navigate("Login");
       }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, []);
 
   const renderProductItem = ({ item } : { item : Product}) => (
     <TouchableOpacity

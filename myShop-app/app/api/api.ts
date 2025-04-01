@@ -166,10 +166,11 @@ export async function createOrder(orderData: CreateOrder): Promise<Order | null>
     const data = await response.json();
     console.log("Order created:", data);
 
-    return data;
+    return data;  // Ensure you're returning the expected Order data structure
   } catch (error) {
     console.error("Error creating order:", error);
     return null;
   }
 }
+
 

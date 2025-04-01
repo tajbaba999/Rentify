@@ -20,7 +20,7 @@ import ConfettiCannon from "react-native-confetti-cannon";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import dayjs from "dayjs";
 
-const CartScreen = () => {
+const CartScreen = ({route}) => {
   const { products, total, reduceProduct, addProduct, clearCart } =
     useCartStore((state) => ({
       products: state.products,
@@ -48,6 +48,10 @@ const CartScreen = () => {
   const navigation = useNavigation();
 
   const onSubmitOrder = async () => {
+    if (!email || !houseNumber || !city || !state || !country || !pincode) {
+      alert("Please fill all the fields");
+      return;
+    }
     setSubmitting(true);
     Keyboard.dismiss();
     try {
@@ -59,11 +63,11 @@ const CartScreen = () => {
         : null;
 
       const orderData: any = {
-        email,
+        customer_email: email,  
         start_date: formattedStartDate,
         end_date: formattedEndDate,
-        productIdsArray: products.map((product) => product.id),
-        orderTotal: total,
+        product_ids: products.map((product) => product.id),  
+        total: total,  
         house_number: houseNumber,
         city,
         state,
@@ -75,7 +79,8 @@ const CartScreen = () => {
       const response = await createOrder(orderData);
 
       setOrder(response);
-      console.log("Order Created:", response);
+      console.log("Order Creates:", JSON.stringify(response));
+      // console.log("Order Created:", response.json());
       clearCart();
     } finally {
       setSubmitting(false);
@@ -118,7 +123,7 @@ const CartScreen = () => {
             )}
             <FlatList
               data={products}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => item.id?.toString()}
               renderItem={({ item }) => (
                 <View style={styles.cartItemContainer}>
                   <Image
