@@ -14,31 +14,40 @@ import { useNavigation } from "@react-navigation/native";
 import { auth } from "../../firebaseConfig";
 
 interface Product {
-  id: number;
+  id: string;
   product_name: string;
   product_category: string;
   product_description: string;
   product_price: number;
   product_stock: number;
-  product_image: string;
+  product_image?: string;
 }
 
 
 const Products = ({ navigation }: ProductsPageProps) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   // const navigation = useNavigation();
 
   useEffect(() => {
-    const load = async () => {
+    const loadProducts = async () => {
       try {
         const data = await fetchProducts();
         if (Array.isArray(data)) {
-          setProducts(data.filter((item) => item?.id)); 
+          const formattedData = data.map((item: any) => ({
+            id: item.id || item._id, // Handle MongoDB's `_id`
+            product_name: item.product_name,
+            product_category: item.product_category,
+            product_description: item.product_description,
+            product_price: item.product_price,
+            product_stock: item.product_stock,
+            product_image: item.product_image || "https://via.placeholder.com/150", // Fallback image
+          }));
+          setProducts(formattedData);
         } else {
-          console.error("Invalid product data:", data);
+          console.error("Invalid product data received:", JSON.stringify(data));
         }
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -46,17 +55,19 @@ const Products = ({ navigation }: ProductsPageProps) => {
         setLoading(false);
       }
     };
-    load();
+
+    loadProducts();
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (!user) {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      if (!currentUser) {
         navigation.navigate("Login");
       }
     });
     return unsubscribe;
-  }, []);
+  }, [navigation]);
 
   const renderProductItem = ({ item } : { item : Product}) => (
     <TouchableOpacity
