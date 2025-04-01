@@ -25,6 +25,7 @@ type ProductsStackParamList = {
   SignUp: undefined;
   Profile: undefined;
   DocumentUpload: undefined;
+  Home: undefined; 
 };
 
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
@@ -68,24 +69,24 @@ const ProfileButton = () => {
 };
 
 const ProductsStackNav = ({ user }) => {
-
   const [userData, setUserData] = React.useState(user || null);
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     const loadUser = async () => {
       try {
-        if(!userData){
-          const storedUser = await AsyncStorage.getItem('user');
-          if(storedUser){
+        if (!userData) {
+          const storedUser = await AsyncStorage.getItem("user");
+          if (storedUser) {
             setUserData(JSON.parse(storedUser));
           }
         }
       } catch (error) {
-        console.error("Error loading user data:",error);
+        console.error("Error loading user data:", error);
       }
-    }
+    };
     loadUser();
   }, []);
+
   return (
     <ProductsStack.Navigator
       screenOptions={{
@@ -101,7 +102,7 @@ const ProductsStackNav = ({ user }) => {
         ),
       }}
     >
-      {!user ? (
+      {!userData ? (
         <>
           <ProductsStack.Screen
             name="Login"
@@ -114,17 +115,16 @@ const ProductsStackNav = ({ user }) => {
             options={{ headerTitle: "Sign Up" }}
           />
         </>
-      ) : !user.documentsVerified ? (
-        <ProductsStack.Screen
-          name="DocumentUpload"
-          component={DocumentUploadScreen}
-          options={{
-            headerTitle: "Upload Documents",
-            headerLeft: () => null,
-          }}
-        />
       ) : (
         <>
+          <ProductsStack.Screen
+            name="DocumentUpload"
+            component={DocumentUploadScreen}
+            options={{
+              headerTitle: "Upload Documents",
+              headerLeft: () => null,
+            }}
+          />
           <ProductsStack.Screen
             name="Products"
             component={Products}
@@ -150,6 +150,7 @@ const ProductsStackNav = ({ user }) => {
     </ProductsStack.Navigator>
   );
 };
+
 
 const styles = StyleSheet.create({
   countContainer: {
