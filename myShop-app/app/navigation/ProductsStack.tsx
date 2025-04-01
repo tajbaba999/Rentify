@@ -15,6 +15,7 @@ import useCartStore from "@/state/cartStore";
 import { Text } from "react-native";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import DocumentUploadScreen from "../screens/DocumentUploadScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type ProductsStackParamList = {
   Products: undefined;
@@ -67,6 +68,24 @@ const ProfileButton = () => {
 };
 
 const ProductsStackNav = ({ user }) => {
+
+  const [userData, setUserData] = React.useState(user || null);
+
+  React.useEffect(()=>{
+    const loadUser = async () => {
+      try {
+        if(!userData){
+          const storedUser = await AsyncStorage.getItem('user');
+          if(storedUser){
+            setUserData(JSON.parse(storedUser));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading user data:",error);
+      }
+    }
+    loadUser();
+  }, []);
   return (
     <ProductsStack.Navigator
       screenOptions={{

@@ -1,5 +1,5 @@
 // const API_URL = process.env.EXPO_PUBLIC_API_URL;
-const API_URL = "http://192.168.0.120:8000";
+const API_URL = "http://192.168.1.7:8000";
 
 export interface Product {
   id: number;
@@ -16,11 +16,11 @@ interface CreateOrder {
   products: Array<{ product_id: number; quantity: number }>;
   start_date: string;
   end_date: string;
-  house_number: string;  
-  city: string;         
-  state: string;        
-  country: string;      
-  pincode: string;      
+  house_number: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
 }
 
 export interface Order {
@@ -33,10 +33,10 @@ export interface Order {
 export async function fetchProducts(): Promise<Product[]> {
   try {
     const response = await fetch(`${API_URL}/products`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        Accept: "application/json",
+        "Content-Type": "application/json",
       },
     });
     console.log("hits" + response);

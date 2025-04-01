@@ -156,7 +156,7 @@ router.post("/orders", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-router.get("/orders/", async (req: Request, res: Response): Promise<void> => {
+router.get("/orders", async (req: Request, res: Response): Promise<void> => {
   try {
     const Orders = await Order.find({});
     if (!Orders) {

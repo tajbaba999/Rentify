@@ -4,6 +4,8 @@ import * as DocumentPicker from "expo-document-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "../../firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
+import { CommonActions } from '@react-navigation/native';
+import { DevSettings } from 'react-native';
 // import { useNavigation } from "@react-navigation/native";
 
 interface Document {
@@ -83,7 +85,7 @@ const DocumentUploadScreen = ({ navigation }) => {
       formData.append("email", email);
 
       // POST the data to the /upload endpoint
-      const response = await fetch(`http://192.168.1.2:8000/upload`, {
+      const response = await fetch(`http://192.168.1.7:8000/upload`, {
         method: "POST",
         body: formData,
       });
@@ -91,10 +93,46 @@ const DocumentUploadScreen = ({ navigation }) => {
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-      console.log("Upload successful, navigating to Products...");
-      setTimeout(() => {
-        navigation.navigate("Products");
-      }, 500);
+      
+      console.log("Upload successful");
+      
+      try {
+        // Update the user data in AsyncStorage
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          parsedUser.documentsVerified = true;
+          await AsyncStorage.setItem('user', JSON.stringify(parsedUser));
+        }
+        
+        // Instead of trying to navigate directly to Products,
+        // just reload the root component which will re-evaluate conditions
+        Alert.alert(
+          "Success", 
+          "Document uploaded successfully. App will restart to apply changes.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: 'Products' }], 
+                  })
+                );
+                
+                // Then reload the app after a brief delay
+                setTimeout(() => {
+                  DevSettings.reload(); 
+                }, 500);
+              }
+            }
+          ]
+        );
+      } catch (error) {
+        console.error("Error updating user verification status:", error);
+        Alert.alert("Error", "Document uploaded but failed to update status");
+      }
     } catch (error) {
       console.error("Error during document submission:", error);
       Alert.alert("Error", "Failed to upload document. Please try again.");
